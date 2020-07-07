@@ -20,6 +20,15 @@
     background: #84828F;
 }
 
+.card-cell.selecting {
+    cursor: pointer;
+    background: #5F7081;
+}
+
+.card-cell.selecting:hover {
+    background: #2C3D55;
+}
+
 .card-form-container {
     padding-top: 30px;
     width: 50%;

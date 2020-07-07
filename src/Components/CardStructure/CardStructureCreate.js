@@ -1,6 +1,7 @@
 import React from "react";
 import { v4 as uuidv4 } from 'uuid';
-import { Container, Form, FormGroup, Input, Label, Button } from "reactstrap";
+import { Container, Form, FormGroup, Input, InputGroup, InputGroupAddon, Label, Button } from "reactstrap";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import ReactCardFlip from 'react-card-flip';
 
 import './CardStructure.css'
@@ -15,6 +16,8 @@ class CardStructureCreate extends React.Component {
         this.state = {
             selectedType: 'Imagen',
             isFlipped: false,
+            selecting: false,
+            selectingKey: undefined,
             formValues: {},
             frontElements: [],
             backElements: []
@@ -33,11 +36,20 @@ class CardStructureCreate extends React.Component {
         })
     }
 
-    onChange = (key, value) => {
-        const formValues = {...this.state.formValues}
-        formValues[key] = value;
+    startSelecting = (key) => {
         this.setState({
-            formValues
+            selecting: true,
+            selectingKey: key
+        })
+    }
+
+    selectCoordinate = (value) => {
+        const formValues = {...this.state.formValues}
+        formValues[this.state.selectingKey] = value;
+        this.setState({
+            formValues,
+            selecting: false,
+            selectingKey: undefined
         })
     }
 
@@ -66,7 +78,7 @@ class CardStructureCreate extends React.Component {
         const cells = [];
         for (let j=0; j<settings.cardHeight; j++){
             for (let i=0; i<settings.cardWidth; i++) {
-                cells.push(<CardStructureCell key={`${i}-${j}`} position={[i, j]}/>)
+                cells.push([i, j])
             }
         }
 
@@ -80,33 +92,42 @@ class CardStructureCreate extends React.Component {
                 <div className="d-flex card-form-container align-items-center justify-content-center">
                     <Form autoComplete="nope">
                         <FormGroup>
-                        <Label for="type">Tipo</Label>
-                        <Input id="type" type="select" value={this.state.selectedType} onChange={this.changeSelectedType}>
-                            {elementTypes.map(type => <option key={type} value={type}>{type}</option>)}
-                        </Input>
+                            <Label for="type">Tipo</Label>
+                            <Input id="type" type="select" value={this.state.selectedType} onChange={this.changeSelectedType}>
+                                {elementTypes.map(type => <option key={type} value={type}>{type}</option>)}
+                            </Input>
                         </FormGroup>
                         {elementInputs.map(item => {
                             return <FormGroup key={item.id}>
                                 <Label for={item.id}>{item.label}</Label>
-                                <Input id={item.id} autoComplete="off" type={item.type} value={this.state.formValues[item.id] || ''} placeholder={item.placeholder} onChange={e => {this.onChange(item.id, e.target.value)}}/>
+                                <InputGroup>
+                                    <InputGroupAddon addonType="prepend"><Button color="info" onClick={() => {this.startSelecting(item.id)}}>Seleccionar</Button></InputGroupAddon>
+                                    <Input id={item.id} type={item.type} value={this.state.formValues[item.id] || ''} readOnly placeholder="Not Selected"/>
+                                </InputGroup>
                             </FormGroup>
                         })}
-                        <Button color="success" type="button" onClick={this.addElement}>Agregar</Button>
+                        <div className="d-flex justify-content-end">
+                            <Button className="mt-2" color="success" type="button" onClick={this.addElement}>Agregar</Button>
+                        </div>
                     </Form>
                 </div>
                 <div className="d-flex flex-column card-view-container align-items-center">
-                    <div className="pb-3">{this.state.isFlipped? 'Reverso' : 'Anverso'}</div>
+                    <h4 className="pb-3">{this.state.isFlipped? 'REVERSO' : 'ANVERSO'}</h4>
                     <ReactCardFlip isFlipped={this.state.isFlipped}>
                         <div className="d-flex card-outline flex-wrap justify-content-between">
-                            {cells}
+                            {cells.map(cell =>
+                                <CardStructureCell key={`${cell[0]},${cell[1]}`} position={cell} selecting={this.state.selecting} selectCoordinate={this.selectCoordinate}/>
+                            )}
                             {this.state.frontElements.map(element => <CardStructureElement key={element.id} element={element} remove={this.removeElement}/>)}
                         </div>
                         <div className="d-flex card-outline flex-wrap justify-content-between">
-                            {cells}
+                            {cells.map(cell =>
+                                <CardStructureCell key={`${cell[0]},${cell[1]}`} position={cell} selecting={this.state.selecting} selectCoordinate={this.selectCoordinate}/>
+                            )}
                             {this.state.backElements.map(element => <CardStructureElement key={element.id} element={element} remove={this.removeElement}/>)}
                         </div>
                     </ReactCardFlip>
-                    <Button className="mt-3" color="success" onClick={this.toggleFlipped}>Flip</Button>
+                    <Button className="mt-3" color="success" onClick={this.toggleFlipped}><FontAwesomeIcon icon="sync-alt"/> Flip</Button>
                 </div>
             </div>
         </Container>
